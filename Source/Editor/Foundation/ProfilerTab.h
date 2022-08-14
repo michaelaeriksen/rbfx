@@ -28,7 +28,7 @@
 #include <atomic>
 #include <functional>
 
-namespace tracy { struct View; }
+namespace tracy { class View; }
 
 namespace Urho3D
 {

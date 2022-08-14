@@ -30,9 +30,9 @@
 #include <ImGui/imgui_stdlib.h>
 
 #if URHO3D_PROFILING
-#include <server/TracyBadVersion.hpp>
-#include <server/TracyView.hpp>
-#include <server/TracyMouse.hpp>
+#include <tracy/server/TracyBadVersion.hpp>
+#include <tracy/server/TracyView.hpp>
+#include <tracy/server/TracyMouse.hpp>
 #endif
 
 namespace Urho3D
