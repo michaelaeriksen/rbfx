@@ -122,7 +122,7 @@ endif ()
 if (NOT MINI_URHO)
     # Headers are required even in non-profiled builds so we can keep all profiling macros.
     install (FILES Tracy.hpp TracyC.h TracyOpenGL.hpp DESTINATION ${DEST_THIRDPARTY_HEADERS_DIR}/tracy/)
-    foreach (dir common client)
+    foreach (dir common client server)
         install (DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${dir}/ DESTINATION ${DEST_THIRDPARTY_HEADERS_DIR}/tracy/${dir}/ FILES_MATCHING PATTERN *.h)
         install (DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${dir}/ DESTINATION ${DEST_THIRDPARTY_HEADERS_DIR}/tracy/${dir}/ FILES_MATCHING PATTERN *.hpp)
     endforeach ()
