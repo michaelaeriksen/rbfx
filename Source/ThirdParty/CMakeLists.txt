@@ -40,8 +40,6 @@ add_subdirectory(IconFontCppHeaders)
 add_subdirectory(CLI11)
 add_subdirectory(fmt)
 add_subdirectory(spdlog)
-set (SDL_CMAKE_DEBUG_POSTFIX "" CACHE STRING "" FORCE)
-set (SDL_RENDER OFF CACHE BOOL "" FORCE)
 add_subdirectory(SDL)
 add_subdirectory(ETCPACK)
 
@@ -163,11 +161,6 @@ if (NOT MINI_URHO)
 
     # Tracy's headers are included even in non-profiled builds in order to provide stub profiler macros.
     add_subdirectory (tracy)
-
-    if (URHO3D_TOOLS)
-        set (ASSIMP_BUILD_IFC_IMPORTER OFF)
-        add_subdirectory(Assimp)
-    endif ()
 endif ()
 
 if (URHO3D_CSHARP_TOOLS AND DESKTOP)

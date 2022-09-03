@@ -1152,10 +1152,12 @@ void Node::ReorderComponent(Component* component, unsigned index)
     components_.insert_at(index, componentShared);
 }
 
-Node* Node::Clone(CreateMode mode)
+Node* Node::Clone(Node* parent, CreateMode mode)
 {
+    Node* destination = parent ? parent : parent_;
+
     // The scene itself can not be cloned
-    if (this == scene_ || !parent_)
+    if (this == scene_ || !destination)
     {
         URHO3D_LOGERROR("Can not clone node without a parent");
         return nullptr;
@@ -1164,7 +1166,7 @@ Node* Node::Clone(CreateMode mode)
     URHO3D_PROFILE("CloneNode");
 
     SceneResolver resolver;
-    Node* clone = CloneRecursive(parent_, resolver, mode);
+    Node* clone = CloneRecursive(destination, resolver, mode);
     resolver.Resolve();
     clone->ApplyAttributes();
     return clone;
@@ -1363,6 +1365,11 @@ unsigned Node::GetChildIndex(const Node* child) const
 {
     auto iter = ea::find(children_.begin(), children_.end(), child);
     return iter != children_.end() ? static_cast<unsigned>(iter - children_.begin()) : M_MAX_UNSIGNED;
+}
+
+unsigned Node::GetIndexInParent() const
+{
+    return parent_ ? parent_->GetChildIndex(this) : M_MAX_UNSIGNED;
 }
 
 Node* Node::GetChild(unsigned index) const

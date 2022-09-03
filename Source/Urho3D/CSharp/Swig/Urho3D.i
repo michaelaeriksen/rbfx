@@ -97,9 +97,9 @@ using namespace Urho3D;
 #   include <Urho3D/WindowsSupport.h>
 #endif
 #include <Urho3D/Urho3DAll.h>   // If this include is missing please build with -DURHO3D_MONOLITHIC_HEADER=ON
-#include <SDL/SDL_joystick.h>
-#include <SDL/SDL_gamecontroller.h>
-#include <SDL/SDL_keycode.h>
+#include <SDL_joystick.h>
+#include <SDL_gamecontroller.h>
+#include <SDL_keycode.h>
 #include <Urho3D/CSharp/Native/SWIGHelpers.h>
 %}
 
@@ -833,7 +833,6 @@ public:
 #endif
 // --------------------------------------- SystemUI ---------------------------------------
 #if defined(URHO3D_SYSTEMUI)
-%ignore SystemUI::GetValueCache;
 using ImGuiConfigFlags = unsigned;
 %ignore ToImGui;
 %ignore ToIntVector2;
@@ -850,16 +849,11 @@ using ImGuiConfigFlags = unsigned;
 %ignore ImGui::pdpx;
 %ignore ImGui::pdpy;
 %ignore ImGui::pdp;
-%ignore Urho3D::Gizmo::Manipulate(const Camera* camera, Node** begin, Node** end);
-%csconstvalue("7") Urho3D::GIZMOOP_TRANSLATE;
-%csconstvalue("120") Urho3D::GIZMOOP_ROTATE;
-%csconstvalue("896") Urho3D::GIZMOOP_SCALE;
 %apply unsigned short INPUT[] { ImWchar* };
 
 %include "generated/Urho3D/_pre_systemui.i"
 %include "Urho3D/SystemUI/Console.h"
 %include "Urho3D/SystemUI/DebugHud.h"
-%include "Urho3D/SystemUI/Gizmo.h"
 %include "Urho3D/SystemUI/SystemMessageBox.h"
 %include "Urho3D/SystemUI/SystemUI.h"
 #endif

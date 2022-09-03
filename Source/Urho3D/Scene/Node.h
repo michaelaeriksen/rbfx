@@ -340,7 +340,7 @@ public:
     /// Adjust index order of an existing component in this node.
     void ReorderComponent(Component* component, unsigned index);
     /// Clone scene node, components and child nodes. Return the clone.
-    Node* Clone(CreateMode mode = REPLICATED);
+    Node* Clone(Node* parent = nullptr, CreateMode mode = REPLICATED);
     /// Remove from the parent node. If no other shared pointer references exist, causes immediate deletion.
     void Remove();
     /// Assign to a new parent scene node. Retains the world transform.
@@ -591,6 +591,8 @@ public:
 
     /// Return index of direct child or M_MAX_UNSIGNED if not found.
     unsigned GetChildIndex(const Node* child) const;
+    /// Return index of this node in the parent.
+    unsigned GetIndexInParent() const;
     /// Return child scene node by index.
     Node* GetChild(unsigned index) const;
     /// Return child scene node by name.
