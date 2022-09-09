@@ -20,53 +20,50 @@
 // THE SOFTWARE.
 //
 
-#pragma once
+#include "../../Foundation/ResourceBrowserTab/AssetPipelineFactory.h"
 
-#include "../Core/CommonEditorActions.h"
+#include "../../Assets/ModelImporter.h"
+
+#include <Urho3D/Resource/ResourceCache.h>
+#include <Urho3D/Utility/AssetPipeline.h>
 
 namespace Urho3D
 {
 
-class Project;
-
-class ModifyResourceAction : public EditorAction
+void Foundation_AssetPipelineFactory(Context* context, ResourceBrowserTab* resourceBrowserTab)
 {
-public:
-    explicit ModifyResourceAction(Project* project);
-    void AddResource(Resource* resource);
+    resourceBrowserTab->AddFactory(MakeShared<AssetPipelineFactory>(context));
+}
 
-    void DisableAutoComplete();
-    void SaveOnComplete();
+AssetPipelineFactory::AssetPipelineFactory(Context* context)
+    : BaseResourceFactory(context, 0, "Asset Pipeline")
+{
+}
 
-    /// Implement EditorAction.
-    /// @{
-    bool IsComplete() const override { return !newData_.empty(); }
-    void Complete(bool force) override;
-    void Redo() const override;
-    void Undo() const override;
-    bool MergeWith(const EditorAction& other) override;
-    /// @}
+void AssetPipelineFactory::RenderAuxilary()
+{
+    ui::Separator();
 
-private:
-    struct ResourceData
+    ui::Checkbox("Model Importer", &modelImporter_);
+    if (ui::IsItemHovered())
+        ui::SetTooltip("Add default ModelImporter to the pipeline.");
+
+    ui::Separator();
+}
+
+void AssetPipelineFactory::CommitAndClose()
+{
+    auto cache = GetSubsystem<ResourceCache>();
+
+    auto pipeline = MakeShared<AssetPipeline>(context_);
+
+    if (modelImporter_)
     {
-        StringHash resourceType_;
-        ea::string fileName_;
-        SharedByteVector bytes_;
-    };
+        auto modelImporter = MakeShared<ModelImporter>(context_);
+        pipeline->AddTransformer(modelImporter);
+    }
 
-    void ApplyResourceData(const ea::string& resourceName, const ResourceData& data) const;
-
-    WeakPtr<Project> project_;
-    Context* context_{};
-
-    bool autoComplete_{true};
-    bool saveOnComplete_{};
-
-    ea::unordered_map<ea::string, ResourceData> oldData_;
-    ea::unordered_map<ea::string, ResourceData> newData_;
-
-    mutable ea::function<void()> callback_;
-};
+    pipeline->SaveFile(GetFinalFileName());
+}
 
 }

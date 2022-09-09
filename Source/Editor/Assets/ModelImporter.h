@@ -22,51 +22,36 @@
 
 #pragma once
 
-#include "../Core/CommonEditorActions.h"
+#include "../Project/Project.h"
+
+#include <Urho3D/Utility/AssetTransformer.h>
 
 namespace Urho3D
 {
 
-class Project;
+void Assets_ModelImporter(Context* context, Project* project);
 
-class ModifyResourceAction : public EditorAction
+/// Asset transformer that imports GLTF models.
+class ModelImporter : public AssetTransformer
 {
+    URHO3D_OBJECT(ModelImporter, AssetTransformer);
+
 public:
-    explicit ModifyResourceAction(Project* project);
-    void AddResource(Resource* resource);
+    explicit ModelImporter(Context* context);
 
-    void DisableAutoComplete();
-    void SaveOnComplete();
+    static void RegisterObject(Context* context);
 
-    /// Implement EditorAction.
-    /// @{
-    bool IsComplete() const override { return !newData_.empty(); }
-    void Complete(bool force) override;
-    void Redo() const override;
-    void Undo() const override;
-    bool MergeWith(const EditorAction& other) override;
-    /// @}
+    bool IsApplicable(const AssetTransformerInput& input) override;
+    bool Execute(const AssetTransformerInput& input, AssetTransformerOutput& output) override;
 
 private:
-    struct ResourceData
-    {
-        StringHash resourceType_;
-        ea::string fileName_;
-        SharedByteVector bytes_;
-    };
+    bool ImportGLTF(const ea::string& fileName, const AssetTransformerInput& input, AssetTransformerOutput& output);
+    bool ImportFBX(const ea::string& fileName, const AssetTransformerInput& input, AssetTransformerOutput& output);
+    bool ImportBlend(const ea::string& fileName, const AssetTransformerInput& input, AssetTransformerOutput& output);
 
-    void ApplyResourceData(const ea::string& resourceName, const ResourceData& data) const;
+    ToolManager* GetToolManager() const;
 
-    WeakPtr<Project> project_;
-    Context* context_{};
-
-    bool autoComplete_{true};
-    bool saveOnComplete_{};
-
-    ea::unordered_map<ea::string, ResourceData> oldData_;
-    ea::unordered_map<ea::string, ResourceData> newData_;
-
-    mutable ea::function<void()> callback_;
+    float scale_{1.0f};
 };
 
 }

@@ -22,36 +22,38 @@
 
 #pragma once
 
-#include "../Project/Project.h"
-
-#include <Urho3D/Utility/AssetTransformer.h>
+#include "../Resource/ResourceCache.h"
+#include "../Utility/AssetTransformer.h"
 
 namespace Urho3D
 {
 
-void Foundation_ModelImporter(Context* context, Project* project);
-
-/// Asset transformer that imports GLTF models.
-class ModelImporter : public AssetTransformer
+/// Resource containing an array of AssetTransformer-s.
+class URHO3D_API AssetPipeline : public Resource
 {
-    URHO3D_OBJECT(ModelImporter, AssetTransformer);
+    URHO3D_OBJECT(AssetPipeline, Resource);
 
 public:
-    explicit ModelImporter(Context* context);
+    explicit AssetPipeline(Context* context);
+    static bool CheckExtension(const ea::string& fileName);
 
-    static void RegisterObject(Context* context);
+    void AddTransformer(AssetTransformer* transformer);
+    void RemoveTransformer(AssetTransformer* transformer);
+    void ReorderTransformer(AssetTransformer* transformer, unsigned index);
 
-    bool IsApplicable(const AssetTransformerInput& input) override;
-    bool Execute(const AssetTransformerInput& input, AssetTransformerOutput& output) override;
+    /// Implement Resource.
+    /// @{
+    void SerializeInBlock(Archive& archive) override;
+    bool BeginLoad(Deserializer& source) override;
+    bool Save(Serializer& dest) const override;
+    /// @}
+
+    const ea::vector<SharedPtr<AssetTransformer>>& GetTransformers() const { return transformers_; }
+    const ea::vector<AssetTransformerDependency>& GetDependencies() const { return dependencies_; }
 
 private:
-    bool ImportGLTF(const ea::string& fileName, const AssetTransformerInput& input, AssetTransformerOutput& output);
-    bool ImportFBX(const ea::string& fileName, const AssetTransformerInput& input, AssetTransformerOutput& output);
-    bool ImportBlend(const ea::string& fileName, const AssetTransformerInput& input, AssetTransformerOutput& output);
-
-    ToolManager* GetToolManager() const;
-
-    float scale_{1.0f};
+    ea::vector<SharedPtr<AssetTransformer>> transformers_;
+    ea::vector<AssetTransformerDependency> dependencies_;
 };
 
 }
