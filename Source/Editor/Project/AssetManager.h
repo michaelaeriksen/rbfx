@@ -50,7 +50,11 @@ public:
     explicit AssetManager(Context* context);
     ~AssetManager() override;
 
+    /// Initialize asset manager.
+    /// Should be called after the manager configuration is loaded from file *and* plugins are initialized.
+    void Initialize();
     void Update();
+    void MarkCacheDirty(const ea::string& resourcePath);
 
     /// Serialize
     /// @{
@@ -126,8 +130,6 @@ private:
 
     StringVector GetUpdatedPaths(bool updateAll);
 
-    void Initialize();
-
     void InitializeAssetPipelines();
     void UpdateAssetPipelines();
     void UpdateTransformHierarchy();
@@ -138,6 +140,8 @@ private:
     void ScanAssetsInPath(const ea::string& resourcePath, Stats& stats);
     bool QueueAssetProcessing(const ea::string& resourceName, const ApplicationFlavor& flavor);
     void ProcessAsset(const AssetTransformerInput& input);
+
+    void OnReflectionRemoved(ObjectReflection* reflection);
 
     const WeakPtr<Project> project_;
     SharedPtr<FileWatcher> dataWatcher_;

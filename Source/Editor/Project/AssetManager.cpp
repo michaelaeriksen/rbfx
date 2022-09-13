@@ -64,6 +64,7 @@ AssetManager::AssetManager(Context* context)
     , transformerHierarchy_(MakeShared<AssetTransformerHierarchy>(context_))
 {
     dataWatcher_->StartWatching(project_->GetDataPath(), true);
+    context_->OnReflectionRemoved.Subscribe(this, &AssetManager::OnReflectionRemoved);
 }
 
 AssetManager::~AssetManager()
@@ -103,6 +104,11 @@ void AssetManager::Update()
     ProcessFileSystemUpdates();
     EnsureAssetsAndCacheValid();
     ScanAndQueueAssetProcessing();
+}
+
+void AssetManager::MarkCacheDirty(const ea::string& resourcePath)
+{
+    InvalidateAssetsInPath(resourcePath);
 }
 
 void AssetManager::ProcessFileSystemUpdates()
@@ -161,8 +167,6 @@ void AssetManager::LoadFile(const ea::string& fileName)
     auto jsonFile = MakeShared<JSONFile>(context_);
     if (jsonFile->LoadFile(fileName))
         jsonFile->LoadObject("Cache", *this);
-
-    Initialize();
 }
 
 void AssetManager::SaveFile(const ea::string& fileName) const
@@ -515,7 +519,7 @@ void AssetManager::ProcessAsset(const AssetTransformerInput& input)
         input.resourceName_, input.flavor_);
 
     AssetTransformerOutput output;
-    if (AssetTransformer::ExecuteAndStore(input, transformers, cachePath, output))
+    if (AssetTransformer::ExecuteTransformersAndStore(input, cachePath, output, transformers))
     {
         AssetDesc& assetDesc = assets_[input.resourceName_];
         assetDesc.resourceName_ = input.resourceName_;
@@ -534,7 +538,25 @@ StringVector AssetManager::EnumerateAssetFiles(const ea::string& resourcePath) c
 
     StringVector result;
     fs->ScanDir(result, GetFileName(resourcePath), "", SCAN_FILES, true);
+
+    ea::erase_if(result, [this](const ea::string& fileName)
+    {
+        return project_->IsFileNameIgnored(fileName);
+    });
     return result;
+}
+
+void AssetManager::OnReflectionRemoved(ObjectReflection* reflection)
+{
+    if (transformerHierarchy_->RemoveTransformers(reflection->GetTypeInfo()))
+    {
+        InvalidateAssetsInPath("");
+        assetPipelines_.clear();
+        reloadAssetPipelines_ = true;
+
+        auto cache = GetSubsystem<ResourceCache>();
+        cache->ReleaseResources(AssetPipeline::GetTypeStatic());
+    }
 }
 
 }
