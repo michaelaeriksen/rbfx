@@ -22,22 +22,19 @@
 
 #pragma once
 
-#include "../Project/Project.h"
-
 #include <Urho3D/Utility/AssetTransformer.h>
 
 namespace Urho3D
 {
 
-void Assets_ModelImporter(Context* context, Project* project);
-
-/// Asset transformer that imports GLTF models.
-class ModelImporter : public AssetTransformer
+/// A custom component provided by the plugin.
+class PixelArtGenerator
+    : public AssetTransformer
 {
-    URHO3D_OBJECT(ModelImporter, AssetTransformer);
+    URHO3D_OBJECT(PixelArtGenerator, AssetTransformer);
 
 public:
-    explicit ModelImporter(Context* context);
+    PixelArtGenerator(Context* context);
 
     static void RegisterObject(Context* context);
 
@@ -45,14 +42,7 @@ public:
     bool Execute(const AssetTransformerInput& input, AssetTransformerOutput& output, const AssetTransformerVector& transformers) override;
 
 private:
-    bool ImportGLTF(const ea::string& fileName, const AssetTransformerInput& input, AssetTransformerOutput& output, const AssetTransformerVector& transformers);
-    bool ImportFBX(const ea::string& fileName, const AssetTransformerInput& input, AssetTransformerOutput& output, const AssetTransformerVector& transformers);
-    bool ImportBlend(const ea::string& fileName, const AssetTransformerInput& input, AssetTransformerOutput& output, const AssetTransformerVector& transformers);
-
-    ToolManager* GetToolManager() const;
-
-    float scale_{1.0f};
-    bool repairLooping_{false};
+    unsigned maxSize_{32};
 };
 
 }
