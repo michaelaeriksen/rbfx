@@ -183,7 +183,7 @@ void Editor::Setup()
 
     // Define custom command line parameters here
     auto& cmd = GetCommandLineParser();
-    cmd.add_option("project", pendingOpenProject_, "Project to open or create on startup.")->set_custom_option("dir");
+    cmd.add_option("project", pendingOpenProject_, "Project to open or create on startup.")->type_name("dir");
 
     engineParameters_[EP_WINDOW_TITLE] = GetTypeName();
     engineParameters_[EP_APPLICATION_NAME] = GetWindowTitle();

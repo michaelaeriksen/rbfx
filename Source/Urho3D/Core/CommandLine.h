@@ -46,7 +46,7 @@ inline std::stringstream& operator<<(std::stringstream &out, ea::string& val)
 
 }
 
-#include <CLI11/CLI11.hpp>
+#include <CLI/CLI.hpp>
 
 
 namespace CLI
@@ -55,7 +55,7 @@ namespace CLI
 namespace detail
 {
 
-template <> constexpr const char *type_name<ea::string>() { return "TEXT"; }
+//template <> constexpr const char *type_name<ea::string>() { return "TEXT"; }
 
 }
 
