@@ -46,6 +46,7 @@ jobs:
     name: Discord Commits
     runs-on: ubuntu-20.04
     continue-on-error: true
+    if: github.repository == 'rbfx/rbfx' && github.branch == 'master'
     steps:
       - name: Discord Commits
         uses: dearimgui/github_discord_notifier@latest
@@ -53,7 +54,6 @@ jobs:
           discord-webhook: ${{ secrets.DISCORD_WEBHOOK_COMMITS }}
           github-token: ${{ github.token }}
           action-task: discord-commits
-          discord-filter: "'{{ github.branch }}' == 'master'"
           discord-username: GitHub
 
   Windows:
@@ -133,10 +133,15 @@ jobs:
         shell: bash
         run: ${{ env.ci_build_script }} build-${{ env.ci_compiler }}
 
-      - name: Test
+      - name: Test (Native)
         if: matrix.ci_compiler == 'msvc'
         shell: bash
         run: ${{ env.ci_build_script }} test
+
+      - name: Test (Managed)
+        if: (matrix.ci_compiler == 'msvc') && (matrix.ci_lib_type == 'dll')
+        shell: bash
+        run: ${{ env.ci_build_script }} cstest
 
       - name: Install
         shell: bash
@@ -308,7 +313,7 @@ jobs:
         shell: bash
         run: ${{ env.ci_build_script }} build
 
-      - name: Test
+      - name: Test (Native)
         shell: bash
         run: ${{ env.ci_build_script }} test
 
@@ -666,3 +671,23 @@ jobs:
           do
             dotnet nuget push $pkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
           done
+
+  Docs:
+    runs-on: ubuntu-20.04
+    if: github.repository == 'rbfx/rbfx'
+    needs:
+      - Windows
+      - UWP
+      - MacOS
+      - Android
+      - iOS
+      - Web
+      - CheckSkipCI
+    env:
+      GH_TOKEN: ${{ secrets.RBFX_DOCS_DEPLOY_TOKEN }}
+
+    steps:
+      - name: Trigger
+        shell: bash
+        run: |
+          gh workflow run --repo rbfx/rbfx-docs Documentation
