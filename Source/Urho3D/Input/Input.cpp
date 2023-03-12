@@ -322,6 +322,7 @@ void JoystickState::Initialize(unsigned numButtons, unsigned numAxes, unsigned n
     buttons_.resize(numButtons);
     buttonPress_.resize(numButtons);
     axes_.resize(numAxes);
+    validAxis_.resize(numAxes);
     hats_.resize(numHats);
 
     Reset();
@@ -335,7 +336,22 @@ void JoystickState::Reset()
         buttonPress_[i] = false;
     }
     for (unsigned i = 0; i < axes_.size(); ++i)
-        axes_[i] = 0.0f;
+    {
+        if (joystick_ && !controller_)
+        {
+            Sint16 state {0};
+            if (SDL_JoystickGetAxisInitialState(joystick_, static_cast<int>(i), &state))
+            {
+                axes_[i] = Clamp(static_cast<float>(state) / 32767.0f, -1.0f, 1.0f);
+                validAxis_[i] = true;
+            }
+        }
+        else
+        {
+            axes_[i] = 0.0f;
+            validAxis_[i] = false;
+        }
+    }
     for (unsigned i = 0; i < hats_.size(); ++i)
         hats_[i] = HAT_CENTER;
 }
@@ -1279,6 +1295,7 @@ SDL_JoystickID Input::OpenJoystick(unsigned index)
     int joystickID = SDL_JoystickInstanceID(joystick);
     JoystickState& state = joysticks_[joystickID];
     state.joystick_ = joystick;
+    state.type_ = static_cast<JoystickDeviceType>(SDL_JoystickGetDeviceType(index));
     state.joystickID_ = joystickID;
     state.name_ = SDL_JoystickName(joystick);
     if (SDL_IsGameController(index))
@@ -1446,7 +1463,7 @@ Vector2 Input::GetRelativeMousePosition() const
 {
     const IntVector2 backbufferSize = GetBackbufferSize();
     const IntVector2 localPosition = GetMousePosition();
-    return static_cast<Vector2>(localPosition) / static_cast<Vector2>(backbufferSize);
+    return localPosition.ToVector2() / backbufferSize.ToVector2();
 }
 
 IntVector2 Input::GetMouseMove() const
@@ -2343,14 +2360,17 @@ void Input::HandleSDLEvent(void* sdlEvent)
                 VariantMap& eventData = GetEventDataMap();
                 eventData[P_JOYSTICKID] = joystickID;
                 eventData[P_AXIS] = evt.jaxis.axis;
-                eventData[P_POSITION] = Clamp((float)evt.jaxis.value / 32767.0f, -1.0f, 1.0f);
+                eventData[P_POSITION] = Clamp(static_cast<float>(evt.jaxis.value) / 32767.0f, -1.0f, 1.0f);
 
                 if (evt.jaxis.axis < state.axes_.size())
                 {
                     // If the joystick is a controller, only use the controller axis mappings
                     // (we'll also get the controller event)
                     if (!state.controller_)
+                    {
                         state.axes_[evt.jaxis.axis] = eventData[P_POSITION].GetFloat();
+                        state.validAxis_[evt.jaxis.axis] = true;
+                    }
                     SendEvent(E_JOYSTICKAXISMOVE, eventData);
                 }
             }
@@ -2428,11 +2448,12 @@ void Input::HandleSDLEvent(void* sdlEvent)
             VariantMap& eventData = GetEventDataMap();
             eventData[P_JOYSTICKID] = joystickID;
             eventData[P_AXIS] = evt.caxis.axis;
-            eventData[P_POSITION] = Clamp((float)evt.caxis.value / 32767.0f, -1.0f, 1.0f);
+            eventData[P_POSITION] = Clamp(static_cast<float>(evt.caxis.value) / 32767.0f, -1.0f, 1.0f);
 
             if (evt.caxis.axis < state.axes_.size())
             {
                 state.axes_[evt.caxis.axis] = eventData[P_POSITION].GetFloat();
+                state.validAxis_[evt.caxis.axis] = true;
                 SendEvent(E_JOYSTICKAXISMOVE, eventData);
             }
         }
@@ -2539,7 +2560,7 @@ void Input::HandleScreenMode(StringHash eventType, VariantMap& eventData)
     IntVector2 windowSize;
     SDL_GetWindowSize(window, &windowSize.x_, &windowSize.y_);
     if (windowSize != IntVector2::ZERO && backbufferSize != IntVector2::ZERO)
-        systemToBackbufferScale_ = static_cast<Vector2>(backbufferSize) / static_cast<Vector2>(windowSize);
+        systemToBackbufferScale_ = backbufferSize.ToVector2() / windowSize.ToVector2();
     else
         systemToBackbufferScale_ = Vector2::ONE;
 }
@@ -2705,12 +2726,12 @@ void Input::HandleScreenJoystickTouch(StringHash eventType, VariantMap& eventDat
 
 IntVector2 Input::SystemToBackbuffer(const IntVector2& value) const
 {
-    return VectorRoundToInt(static_cast<Vector2>(value) * systemToBackbufferScale_);
+    return VectorRoundToInt(value.ToVector2() * systemToBackbufferScale_);
 }
 
 IntVector2 Input::BackbufferToSystem(const IntVector2& value) const
 {
-    return VectorRoundToInt(static_cast<Vector2>(value) / systemToBackbufferScale_);
+    return VectorRoundToInt(value.ToVector2() / systemToBackbufferScale_);
 }
 
 IntVector2 Input::GetGlobalWindowPosition() const

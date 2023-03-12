@@ -418,6 +418,8 @@ void Animation::SetLength(float length)
 
 AnimationTrack* Animation::CreateTrack(const ea::string& name)
 {
+    MarkRevisionUpdated();
+
     /// \todo When tracks / keyframes are created dynamically, memory use is not updated
     static const AnimationTrack defaultTrack;
     const auto [iter, isNew] = tracks_.emplace(name, defaultTrack);
@@ -433,6 +435,8 @@ AnimationTrack* Animation::CreateTrack(const ea::string& name)
 
 VariantAnimationTrack* Animation::CreateVariantTrack(const ea::string& name)
 {
+    MarkRevisionUpdated();
+
     /// \todo When tracks / keyframes are created dynamically, memory use is not updated
     static const VariantAnimationTrack defaultTrack;
     const auto [iter, isNew] = variantTracks_.emplace(name, defaultTrack);
@@ -448,6 +452,8 @@ VariantAnimationTrack* Animation::CreateVariantTrack(const ea::string& name)
 
 bool Animation::RemoveTrack(const ea::string& name)
 {
+    MarkRevisionUpdated();
+
     const StringHash nameHash(name);
     unsigned numRemoved = 0;
     numRemoved += tracks_.erase(nameHash);
@@ -457,6 +463,8 @@ bool Animation::RemoveTrack(const ea::string& name)
 
 void Animation::RemoveAllTracks()
 {
+    MarkRevisionUpdated();
+
     tracks_.clear();
     variantTracks_.clear();
 }
@@ -509,9 +517,11 @@ SharedPtr<Animation> Animation::Clone(const ea::string& cloneName) const
     SharedPtr<Animation> ret(MakeShared<Animation>(context_));
 
     ret->SetName(cloneName);
+    ret->SetAbsoluteFileName(cloneName == GetName() ? GetAbsoluteFileName() : EMPTY_STRING);
     ret->SetAnimationName(animationName_);
     ret->length_ = length_;
     ret->tracks_ = tracks_;
+    ret->variantTracks_ = variantTracks_;
     ret->triggers_ = triggers_;
     ret->CopyMetadata(*this);
     ret->SetMemoryUse(GetMemoryUse());

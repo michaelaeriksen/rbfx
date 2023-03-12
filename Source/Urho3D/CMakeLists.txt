@@ -106,6 +106,10 @@ if (URHO3D_SYSTEMUI)
     define_engine_source_files (SystemUI)
 endif ()
 
+if (URHO3D_ACTIONS)
+    define_engine_source_files (Actions)
+endif ()
+
 # Remove compute source files as needed
 if (NOT URHO3D_COMPUTE)
     list(REMOVE_ITEM SOURCE_FILES
@@ -184,7 +188,6 @@ set (THIRD_PARTY_DEPENDENCIES
     IconFontCppHeaders
     Civetweb
     SLikeNet
-    ik
     Detour
     DetourCrowd
     DetourTileCache
@@ -353,20 +356,13 @@ if (WEB)
     set_target_properties(Urho3D PROPERTIES COMPILE_OPTIONS $<$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>:-O3>)
     set_target_properties(Urho3D PROPERTIES LINK_FLAGS_RELEASE -sAGGRESSIVE_VARIABLE_ELIMINATION=1)
     target_compile_options(Urho3D PUBLIC $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:${EMCC_WITH_SOURCE_MAPS_FLAG}>)
-    target_link_libraries(Urho3D PUBLIC -sDISABLE_EXCEPTION_CATCHING=1 -sFORCE_FILESYSTEM=1 -sDISABLE_DEPRECATED_FIND_EVENT_TARGET_BEHAVIOR=0)
-    if (EMSCRIPTEN_EMCC_VERSION VERSION_LESS 2.0.18)
-        set (EXTRA_ "EXTRA_")
-    endif ()
+    target_link_libraries(Urho3D PUBLIC -sDISABLE_EXCEPTION_CATCHING=1 -sFORCE_FILESYSTEM=1 -sDISABLE_DEPRECATED_FIND_EVENT_TARGET_BEHAVIOR=0 -lidbfs.js)
     target_link_libraries(Urho3D PUBLIC "-s ${EXTRA_}EXPORTED_RUNTIME_METHODS=['Pointer_stringify']" --bind)
     if (NOT EMSCRIPTEN_TOTAL_MEMORY OR "${EMSCRIPTEN_TOTAL_MEMORY}" STREQUAL "0")
         target_link_libraries(Urho3D PUBLIC "-s ALLOW_MEMORY_GROWTH=1" --no-heap-copy)
     else ()
         math(EXPR EMSCRIPTEN_TOTAL_MEMORY_BYTES "${EMSCRIPTEN_TOTAL_MEMORY} * 1024 * 1024")
-        if (EMSCRIPTEN_EMCC_VERSION VERSION_LESS 1.39.9)
-            target_link_libraries(Urho3D PUBLIC "-s TOTAL_MEMORY=${EMSCRIPTEN_TOTAL_MEMORY_BYTES}")
-        else ()
-            target_link_libraries(Urho3D PUBLIC "-s INITIAL_MEMORY=${EMSCRIPTEN_TOTAL_MEMORY_BYTES}")
-        endif ()
+        target_link_libraries(Urho3D PUBLIC "-s INITIAL_MEMORY=${EMSCRIPTEN_TOTAL_MEMORY_BYTES}")
     endif ()
 endif ()
 
@@ -533,7 +529,7 @@ list (REMOVE_DUPLICATES URHO3D_ENGINE_CONFIG)
 list (APPEND URHO3D_ENGINE_CONFIG "")   # For last item to be processed correctly.
 # Give defines without value a value "1".
 string (REPLACE ";" "=1;" URHO3D_ENGINE_CONFIG "${URHO3D_ENGINE_CONFIG}")                   # Append =1 to all defines
-string (REGEX REPLACE "([0-9]|>|\")=1" "\\1" URHO3D_ENGINE_CONFIG "${URHO3D_ENGINE_CONFIG}")   # Clear =1 from defines that already had a value
+string (REGEX REPLACE "(\=[0-9]+)+;" "\\1;" URHO3D_ENGINE_CONFIG "${URHO3D_ENGINE_CONFIG}")   # Clear =1 from defines that already had a value
 # Turn list into c++ preprocessor code
 string (REGEX REPLACE "([^=]+)=([^;]+);" "#ifndef \\1\n#   define \\1 \\2\n#endif\n" URHO3D_ENGINE_CONFIG "${URHO3D_ENGINE_CONFIG}")
 # This will be commented out line in the header.

@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include "../Core/Object.h"
+#include "../IO/MountPoint.h"
 
 namespace Urho3D
 {
@@ -39,9 +39,9 @@ struct PackageEntry
 };
 
 /// Stores files of a directory tree sequentially for convenient access.
-class URHO3D_API PackageFile : public Object
+class URHO3D_API PackageFile : public MountPoint
 {
-    URHO3D_OBJECT(PackageFile, Object);
+    URHO3D_OBJECT(PackageFile, MountPoint);
 
 public:
     /// Construct.
@@ -60,10 +60,6 @@ public:
 
     /// Return all file entries.
     const ea::unordered_map<ea::string, PackageEntry>& GetEntries() const { return entries_; }
-
-    /// Return the package file name.
-    /// @property
-    const ea::string& GetName() const { return fileName_; }
 
     /// Return hash of the package file name.
     StringHash GetNameHash() const { return nameHash_; }
@@ -105,6 +101,15 @@ public:
 
     /// Scan package for specified files.
     void Scan(ea::vector<ea::string>& result, const ea::string& pathName, const ea::string& filter, bool recursive) const;
+
+    /// Implement MountPoint.
+    /// @{
+    bool AcceptsScheme(const ea::string& scheme) const override;
+    bool Exists(const FileIdentifier& fileName) const override;
+    AbstractFilePtr OpenFile(const FileIdentifier& fileName, FileMode mode) override;
+    ea::string GetFileName(const FileIdentifier& fileName) const override;
+    const ea::string& GetName() const override { return fileName_; }
+    /// @}
 
 private:
     /// File entries.

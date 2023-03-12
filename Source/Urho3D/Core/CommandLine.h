@@ -46,7 +46,7 @@ inline std::stringstream& operator<<(std::stringstream &out, ea::string& val)
 
 }
 
-#include <CLI/CLI.hpp>
+#include <CLI11/CLI11.hpp>
 
 
 namespace CLI
@@ -55,7 +55,19 @@ namespace CLI
 namespace detail
 {
 
-//template <> constexpr const char *type_name<ea::string>() { return "TEXT"; }
+template <> struct classify_object<ea::string, void>
+{
+    static constexpr object_category value{object_category::other};
+};
+
+template <> struct is_mutable_container<ea::string> : std::false_type
+{
+};
+
+template <class T, enable_if_t<std::is_same<T, ea::string>::value>> inline std::string type_name()
+{
+    return "TEXT";
+}
 
 }
 

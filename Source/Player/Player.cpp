@@ -27,6 +27,7 @@
 #include <Urho3D/Engine/StateManager.h>
 #include <Urho3D/IO/FileSystem.h>
 #include <Urho3D/IO/Log.h>
+#include <Urho3D/Plugins/PluginApplication.h>
 #include <Urho3D/Plugins/PluginManager.h>
 #include <Urho3D/Resource/ResourceCache.h>
 #if URHO3D_SYSTEMUI
@@ -55,32 +56,32 @@ void Player::Setup()
 #endif
     engineParameters_[EP_PLUGINS] = ea::string::joined(PluginApplication::GetStaticPlugins(), ";");
 
-    settings_ = ApplicationSettings::LoadForCurrentApplication(context_);
-    for (const auto& [name, value] : settings_->GetParametersForCurrentFlavor())
-        engineParameters_[name] = value;
-
     PluginApplication::RegisterStaticPlugins();
 }
 
 void Player::Start()
 {
+    auto engine = GetSubsystem<Engine>();
+    if (!engine->IsHeadless())
+    {
 #if URHO3D_SYSTEMUI
-    ui::GetIO().IniFilename = nullptr;              // Disable of imgui.ini creation,
+        ui::GetIO().IniFilename = nullptr; // Disable of imgui.ini creation,
 #endif
 
-    // TODO(editor): Support resource routing
+        // TODO(editor): Support resource routing
 
 #if URHO3D_RMLUI
-    auto* cache = GetSubsystem<ResourceCache>();
-    auto* ui = GetSubsystem<RmlUI>();
-    ea::vector<ea::string> fonts;
-    cache->Scan(fonts, "Fonts/", "*.ttf", SCAN_FILES, true);
-    cache->Scan(fonts, "Fonts/", "*.otf", SCAN_FILES, true);
-    for (const ea::string& font : fonts)
-        ui->LoadFont(Format("Fonts/{}", font));
+        auto* cache = GetSubsystem<ResourceCache>();
+        auto* ui = GetSubsystem<RmlUI>();
+        ea::vector<ea::string> fonts;
+        cache->Scan(fonts, "Fonts/", "*.ttf", SCAN_FILES, true);
+        cache->Scan(fonts, "Fonts/", "*.otf", SCAN_FILES, true);
+        for (const ea::string& font : fonts)
+            ui->LoadFont(Format("Fonts/{}", font));
 #endif
+    }
 
-    const StringVector loadedPlugins = engineParameters_[EP_PLUGINS].GetString().split(';');
+    const StringVector loadedPlugins = engine->GetParameter(EP_PLUGINS).GetString().split(';');
 
     auto pluginManager = GetSubsystem<PluginManager>();
     pluginManager->SetPluginsLoaded(loadedPlugins);

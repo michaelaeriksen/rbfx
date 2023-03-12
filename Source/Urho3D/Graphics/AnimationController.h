@@ -152,8 +152,8 @@ public:
 
     /// Manage played animations on high level.
     /// @{
-    unsigned FindLastAnimation(Animation* animation) const;
-    const AnimationParameters* GetLastAnimationParameters(Animation* animation) const;
+    unsigned FindLastAnimation(Animation* animation, unsigned layer = M_MAX_UNSIGNED) const;
+    const AnimationParameters* GetLastAnimationParameters(Animation* animation, unsigned layer = M_MAX_UNSIGNED) const;
     bool IsPlaying(Animation* animation) const;
     unsigned PlayNew(const AnimationParameters& params, float fadeInTime = 0.0f);
     unsigned PlayNewExclusive(const AnimationParameters& params, float fadeInTime = 0.0f);
@@ -186,6 +186,9 @@ public:
     float GetWeight(const ea::string& name) const;
     float GetSpeed(const ea::string& name) const;
     /// @}
+
+    bool IsSkeletonReset() const { return resetSkeleton_; }
+    void SetSkeletonReset(bool resetSkeleton) { resetSkeleton_ = resetSkeleton; }
 
     /// Set animation parameters attribute.
     void SetAnimationsAttr(const VariantVector& value);

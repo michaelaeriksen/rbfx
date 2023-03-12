@@ -87,6 +87,17 @@ enum class AnimationParameterMask
 };
 URHO3D_FLAGSET(AnimationParameterMask, AnimationParameterFlags);
 
+bool MatchesQuery(const AnimationParameters& params, Animation* animation, unsigned layer)
+{
+    if (animation && params.animation_ != animation)
+        return false;
+
+    if (layer != M_MAX_UNSIGNED && params.layer_ != layer)
+        return false;
+
+    return true;
+}
+
 }
 
 AnimationParameters::AnimationParameters(Animation* animation)
@@ -371,8 +382,8 @@ void AnimationController::RegisterObject(Context* context)
 
     URHO3D_ACCESSOR_ATTRIBUTE("Is Enabled", IsEnabled, SetEnabled, bool, true, AM_DEFAULT);
     URHO3D_ATTRIBUTE("Reset Skeleton", bool, resetSkeleton_, false, AM_DEFAULT);
-    URHO3D_MIXED_ACCESSOR_ATTRIBUTE("Animations", GetAnimationsAttr, SetAnimationsAttr, VariantVector, Variant::emptyVariantVector, AM_FILE)
-        .SetMetadata(AttributeMetadata::P_VECTOR_STRUCT_ELEMENTS, animationParametersNames);
+    URHO3D_MIXED_ACCESSOR_ATTRIBUTE("Animations", GetAnimationsAttr, SetAnimationsAttr, VariantVector, Variant::emptyVariantVector, AM_DEFAULT)
+        .SetMetadata(AttributeMetadata::VectorStructElements, animationParametersNames);
 }
 
 void AnimationController::ApplyAttributes()
@@ -626,16 +637,16 @@ ea::vector<AnimationParameters> AnimationController::GetAnimationParameters() co
     return params;
 }
 
-unsigned AnimationController::FindLastAnimation(Animation* animation) const
+unsigned AnimationController::FindLastAnimation(Animation* animation, unsigned layer) const
 {
     const auto iter = ea::find_if(animations_.rbegin(), animations_.rend(),
-        [&](const AnimationInstance& value) { return value.params_.animation_ == animation; });
+        [&](const AnimationInstance& value) { return MatchesQuery(value.params_, animation, layer); });
     return iter != animations_.rend() ? (iter.base() - animations_.begin()) - 1 : M_MAX_UNSIGNED;
 }
 
-const AnimationParameters* AnimationController::GetLastAnimationParameters(Animation* animation) const
+const AnimationParameters* AnimationController::GetLastAnimationParameters(Animation* animation, unsigned layer) const
 {
-    const unsigned index = FindLastAnimation(animation);
+    const unsigned index = FindLastAnimation(animation, layer);
     return index != M_MAX_UNSIGNED ? &animations_[index].params_ : nullptr;
 }
 
@@ -892,7 +903,7 @@ void AnimationController::SetAnimationsAttr(const VariantVector& value)
     if (value.empty() || value[0].GetType() != VAR_INT)
         return;
 
-    const unsigned numAnimations = value[0].GetUInt();
+    const auto numAnimations = static_cast<unsigned>(ea::max(0, value[0].GetInt()));
     const unsigned numAnimationsSet = (value.size() - 1) / AnimationParameters::NumVariants;
     const unsigned numLoadedAnimations = ea::min(numAnimations, numAnimationsSet);
 
