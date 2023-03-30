@@ -26,6 +26,7 @@
 #include <Urho3D/Input/Input.h>
 #include <Urho3D/Input/InputEvents.h>
 #include <Urho3D/IO/FileSystem.h>
+#include <Urho3D/IO/VirtualFileSystem.h>
 #include <Urho3D/RenderPipeline/RenderPipeline.h>
 #include <Urho3D/Resource/ResourceCache.h>
 #if URHO3D_RMLUI
@@ -165,8 +166,9 @@ SamplesManager::SamplesManager(Context* context) :
 void SamplesManager::Setup()
 {
     // Modify engine startup parameters
-    engineParameters_[EP_WINDOW_TITLE] = "rbfx samples";
-    engineParameters_[EP_LOG_NAME]     = GetSubsystem<FileSystem>()->GetAppPreferencesDir("rbfx", "samples") + GetTypeName() + ".log";
+    engineParameters_[EP_WINDOW_TITLE] = "Samples";
+    engineParameters_[EP_APPLICATION_NAME] = "Built-in Samples";
+    engineParameters_[EP_LOG_NAME]     = "conf://Samples.log";
     engineParameters_[EP_FULL_SCREEN]  = false;
     engineParameters_[EP_HEADLESS]     = false;
     engineParameters_[EP_SOUND]        = true;
@@ -206,7 +208,8 @@ void SampleSelectionScreen::Deactivate()
 void SamplesManager::Start()
 {
     ResourceCache* cache = context_->GetSubsystem<ResourceCache>();
-    cache->SetAutoReloadResources(true);
+    VirtualFileSystem* vfs = context_->GetSubsystem<VirtualFileSystem>();
+    vfs->SetWatching(true);
 
     UI* ui = context_->GetSubsystem<UI>();
 
@@ -389,7 +392,7 @@ void SamplesManager::Start()
     RegisterSample<AggregatedInput>();
 #if URHO3D_ACTIONS
     RegisterSample<ActionDemo>();
-#endif	
+#endif
 #if URHO3D_RMLUI
     RegisterSample<AdvancedUI>();
 #endif
