@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2017-2020 the rbfx project.
+// Copyright (c) 2008-2022 the Urho3D project.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -22,40 +22,23 @@
 
 #pragma once
 
-
-#include <Urho3D/Plugins/PluginApplication.h>
-#include <Urho3D/Scene/LogicComponent.h>
-#include <Urho3D/Scene/Node.h>
+#include "Urho3D/Core/Object.h"
 
 namespace Urho3D
 {
 
-/// A custom component provided by the plugin.
-class RotateObject
-    : public LogicComponent
+/// IKSolver at the sender Node is about to start solving.
+URHO3D_EVENT(E_IKPRESOLVE, IKPreSolve)
 {
-    URHO3D_OBJECT(RotateObject, LogicComponent);
+    URHO3D_PARAM(P_NODE, Node);         // Node pointer
+    URHO3D_PARAM(P_IKSOLVER, IKSolver); // IKSolver pointer
+}
 
-public:
-    RotateObject(Context* context)
-        : LogicComponent(context)
-    {
-        SetUpdateEventMask(USE_UPDATE);
-    }
-
-    void Update(float timeStep) override
-    {
-        if (animate_)
-            GetNode()->Rotate(Quaternion(10 * timeStep, 20 * timeStep, 30 * timeStep));
-    }
-
-    static void RegisterObject(Context* context)
-    {
-        context->AddFactoryReflection<RotateObject>("Component/User Components");
-        URHO3D_ATTRIBUTE("Animate", bool, animate_, true, AM_EDIT);
-    }
-
-    bool animate_ = true;
-};
+/// IKSolver at the sender Node has finished solving.
+URHO3D_EVENT(E_IKPOSTSOLVE, IKPostSolve)
+{
+    URHO3D_PARAM(P_NODE, Node);         // Node pointer
+    URHO3D_PARAM(P_IKSOLVER, IKSolver); // IKSolver pointer
+}
 
 }
